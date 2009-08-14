@@ -54,7 +54,11 @@ module Abingo::Statistics
   end
 
   def describe_result_in_words
-    z = zscore
+    begin
+      z = zscore
+    rescue
+      return "Could not execute the significance test because one or more of the alternatives has not been seen yet."
+    end
     p = p_value
 
     words = ""
@@ -65,9 +69,9 @@ module Abingo::Statistics
     alts = alternatives - [best_alternative]
     worst_alternative = alts.first
 
-    words += "The best alternative you have is: [#{best_alternative.content}], which had "
+    words += "The best alternative you have is: [#{best_alternative.pretty_content}], which had "
     words += "#{best_alternative.conversions} conversions from #{best_alternative.participants} participants "
-    words += "(#{best_alternative.pretty_conversion_rate}).  The other alternative was [#{worst_alternative.content}],"
+    words += "(#{best_alternative.pretty_conversion_rate}).  The other alternative was [#{worst_alternative.pretty_content}], "
     words += "which had #{worst_alternative.conversions} conversions from #{worst_alternative.participants} participants "
     words += "(#{worst_alternative.pretty_conversion_rate}).  "
 
