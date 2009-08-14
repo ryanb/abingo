@@ -1,10 +1,7 @@
 class Abingo::Alternative < ActiveRecord::Base
+  include Abingo::ConversionRate
 
   belongs_to :experiment
-
-  def conversion_rate
-    1.0 * conversions / participants
-  end
 
   def self.calculate_lookup(test_name, alternative_name)
     Digest::MD5.hexdigest(Abingo.salt + test_name + alternative_name.to_s)

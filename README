@@ -14,10 +14,12 @@ Key default features:
   -- Same individual ALWAYS sees same alternative for same test.
   -- Syntax sugar.  Specify alternatives as a range, array,
        hash of alternative to weighting, or just let it default to true or false.
+  -- A simple z-test of statistical significance, with output so clear anyone in your organization
+       can understand it.
 
 Example: View
 
-<% ab_test("login_button", ["/images/button1.jpg", "/images/button2.jpg"]) do |button_file|
+<% ab_test("login_button", ["/images/button1.jpg", "/images/button2.jpg"]) do |button_file| %>
   <%= img_tag(button_file, :alt => "Login!") %>
 <% end %>
 
@@ -47,6 +49,15 @@ Example: Conversion tracking (in a view)
 
 Thanks for signing up, dude! <% bingo!("signup_page_redesign") >
 
+Example: Statistical Significance Testing
+
+Abingo::Experiment.last.describe_result_in_words
+=> "The best alternative you have is: [0], which had 130 conversions from 5000 participants (2.60%).
+    The other alternative was [1], which had 1800 conversions from 100000 participants (1.80%).
+    This difference is 99.9% likely to be statistically significant, which means you can be extremely
+    confident that it is the result of your alternatives actually mattering, rather than being due to
+    random chance.  However, this doesn't say anything about how much the first alternative is really
+    likely to be better by."
 
 Installation
 =======
@@ -78,7 +89,7 @@ end
 However, you can get some nice syntactical sugar by doing the following
 
 #Within ApplicationController
-  include ABingo #Note capitalization!  ABingo is a module, Abingo is a class.
+  include AbingoSugar
 
 #Within ApplicationHelper
   include AbingoViewHelper
