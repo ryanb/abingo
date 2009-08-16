@@ -23,61 +23,6 @@ class Abingo::Experiment < ActiveRecord::Base
     end
   end
 
-  def chi_squared
-
-    if alternatives.size == 0
-      raise "Cannot calculate the chi-squared statistic of a test with no alternatives"
-    end
-
-    observed_table = Array.new(2)
-    observed_table[0] = Array.new(alternatives.size) #Holds counts of non-converters
-    observed_table[1] = Array.new(alternatives.size) #Holds counts of converters
-    alternatives.each_with_index do |alt, i|
-      observed_table[0][i] = alt.participants - alt.conversions
-      observed_table[1][i] = alt.conversions
-    end
-
-    expected_table = Array.new(2)
-    expected_table[0] = Array.new(alternatives.size) #Holds counts of non-converters
-    expected_table[1] = Array.new(alternatives.size) #Holds counts of converters
-
-    cr = conversion_rate
-
-    alternatives.each_with_index do |alt, i|
-      expected_table[0][i] = (1 - cr) * alternatives[i].participants  #expected non-converters
-      expected_table[1][i] = (cr) * alternatives[i].participants  #expected converters
-    end
-
-    #Now we can actually calculate the chi-squared statistic: sum over all cells
-    #in table, (actual - expected) ^ 2 / expected
-
-    #First flatten them to save having to loop in two dimensions.
-    observed_table.flatten!
-    expected_table.flatten!
-
-    chi = 0
-    alternatives.each_with_index do |alt, i|
-      chi += ((observed_table[i] - expected_table[i]) ** 2) / expected_table[i]
-    end
-
-    chi
-
-  end
-
-  #Determines the p value of the test.
-  #Returns 1 for p value > .10, or the lowest of .05, .01, and .001 that we can
-  #be sure is greater than the p value.
-  def significance_test
-    level = 1
-    chi = chi_squared
-    CHI_SQUARED_VALUES_FOR_STATISTICAL_SIGNIFICANCE.each do |p_val, threshhold|
-      if ((chi > threshhold) && (p_val < level))
-        level = p_val
-      end
-    end
-    level
-  end
-
   def self.exists?(test_name)
     cache_key = "Abingo::Experiment::exists(#{test_name})".gsub(" ", "")
     ret = Abingo.cache.fetch(cache_key) do
@@ -112,7 +57,7 @@ class Abingo::Experiment < ActiveRecord::Base
         :lookup => Abingo::Alternative.calculate_lookup(test_name, alt))
       cloned_alternatives_array -= [alt]
     end
-    Abingo.cache.delete("Abingo::Experiment::exists(#{test_name})".gsub(" ", ""))
+    Abingo.cache.write("Abingo::Experiment::exists(#{test_name})".gsub(" ", ""), 1)
     experiment
   end
 
