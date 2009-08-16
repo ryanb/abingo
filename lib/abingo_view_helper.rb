@@ -22,8 +22,13 @@ module AbingoViewHelper
     else
       choice = Abingo.test(test_name, alternatives, options)
     end
-    content_tag = capture(choice, &block)
-    block_called_from_erb?(block) ? concat(content_tag) : content_tag
+
+    if block
+      content_tag = capture(choice, &block)
+      block_called_from_erb?(block) ? concat(content_tag) : content_tag
+    else
+      choice
+    end
   end
 
   def bingo!(test_name, options = {})
