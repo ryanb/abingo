@@ -2,10 +2,7 @@ class Abingo::Alternative < ActiveRecord::Base
   include Abingo::ConversionRate
 
   belongs_to :experiment
-
-  def pretty_content
-    YAML::load content
-  end
+  serialize :content
 
   def self.calculate_lookup(test_name, alternative_name)
     Digest::MD5.hexdigest(Abingo.salt + test_name + alternative_name.to_s)
