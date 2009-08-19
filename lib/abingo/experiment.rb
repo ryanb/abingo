@@ -49,16 +49,19 @@ class Abingo::Experiment < ActiveRecord::Base
 
   def self.start_experiment!(test_name, alternatives_array)
     cloned_alternatives_array = alternatives_array.clone
-    experiment = Abingo::Experiment.find_or_create_by_test_name(test_name)
-    while (cloned_alternatives_array.size > 0)
-      alt = cloned_alternatives_array[0]
-      weight = cloned_alternatives_array.size - (cloned_alternatives_array - [alt]).size
-      experiment.alternatives.create(:content => alt, :weight => weight,
-        :lookup => Abingo::Alternative.calculate_lookup(test_name, alt))
-      cloned_alternatives_array -= [alt]
+    ActiveRecord::Base.transaction do
+      experiment = Abingo::Experiment.new(:test_name => test_name)
+      while (cloned_alternatives_array.size > 0)
+        alt = cloned_alternatives_array[0]
+        weight = cloned_alternatives_array.size - (cloned_alternatives_array - [alt]).size
+        experiment.alternatives.build(:content => alt, :weight => weight,
+          :lookup => Abingo::Alternative.calculate_lookup(test_name, alt))
+        cloned_alternatives_array -= [alt]
+      end
+      experiment.save!
+      Abingo.cache.write("Abingo::Experiment::exists(#{test_name})".gsub(" ", ""), 1)
+      experiment
     end
-    Abingo.cache.write("Abingo::Experiment::exists(#{test_name})".gsub(" ", ""), 1)
-    experiment
   end
 
 end
