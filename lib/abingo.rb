@@ -129,7 +129,7 @@ class Abingo
         if value.kind_of? Integer
           alternatives_array += [key] * value
         else
-          raise "You gave an array with #{value} as a value.  It needed to be an integer."
+          raise "You gave a hash with #{key} => #{value} as an element.  The value must be an integral weight."
         end
       end
       return alternatives_array
