@@ -11,7 +11,7 @@ class AbingoMigration < ActiveRecord::Migration
     #add_index "experiments", "created_on"
 
     create_table "alternatives", :force => true do |t|
-      t.string :experiment_id
+      t.integer :experiment_id
       t.string :content
       t.string :lookup, :limit => 32
       t.integer :weight, :default => 1
