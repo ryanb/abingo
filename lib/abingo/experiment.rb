@@ -7,6 +7,7 @@ class Abingo::Experiment < ActiveRecord::Base
 
   def before_destroy
     Abingo.cache.delete("Abingo::Experiment::exists(#{test_name})".gsub(" ", ""))
+    true
   end
 
   def participants
