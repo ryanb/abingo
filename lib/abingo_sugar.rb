@@ -6,7 +6,9 @@
 module AbingoSugar
 
   def ab_test(test_name, alternatives = nil, options = {})
-    if (alternatives.nil?)
+    if (Abingo.options[:enable_specification] && !params[test_name].blank?)
+      choice = params[test_name]
+    elsif (alternatives.nil?)
       choice = Abingo.flip(test_name)
     else
       choice = Abingo.test(test_name, alternatives, options)

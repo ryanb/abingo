@@ -85,15 +85,6 @@ def set_abingo_identity
   end
 end
 
-3)  HIGHLY RECOMMENDED: All the A/Bingo methods are accessible from the class Abingo (note capitalization!).
-However, you can get some nice syntactical sugar by doing the following
-
-#Within ApplicationController
-  include AbingoSugar
-
-#Within ApplicationHelper
-  include AbingoViewHelper
-
 3)  RECOMMENDED: A/Bingo makes HEAVY use of the cache to reduce load on the
 database and share potentially long-lived "temporary" data, such as what alternative
 a given visitor should be shown for a particular test.  You SHOULD use a cache

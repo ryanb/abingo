@@ -9,6 +9,12 @@ class Abingo
   cattr_accessor :salt
   @@salt = "Not really necessary."
 
+  @@options ||= {}
+  cattr_accessor :options
+
+  #Defined options:
+  # :enable_specification  => if true, allow params[test_name] to override the calculated value for a test.
+
   #ABingo stores whether a particular user has participated in a particular
   #experiment yet, and if so whether they converted, in the cache.
   #
