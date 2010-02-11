@@ -3,7 +3,7 @@
 module AbingoViewHelper
 
   def ab_test(test_name, alternatives = nil, options = {})
-    if (!Abingo.options[:disable_specification] && !params[test_name].blank?)
+    if (Abingo.options[:enable_specification] && !params[test_name].blank?)
       choice = params[test_name]
     elsif (alternatives.nil?)
       choice = Abingo.flip(test_name)
