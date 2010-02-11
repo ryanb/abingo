@@ -57,9 +57,13 @@ class Abingo
   end
 
   #This is the meat of A/Bingo.
+  #options accepts
+  #  :multiple_participation (true or false)
+  #  :conversion  name of conversion to listen for  (alias: conversion_name)
   def self.test(test_name, alternatives, options = {})
     unless Abingo::Experiment.exists?(test_name)
-      Abingo::Experiment.start_experiment!(test_name, self.parse_alternatives(alternatives))
+      conversion_name = options[:conversion] || options[:conversion_name]
+      Abingo::Experiment.start_experiment!(test_name, self.parse_alternatives(alternatives), conversion_name)
     end
 
     choice = self.find_alternative_for_user(test_name, alternatives)
@@ -82,33 +86,51 @@ class Abingo
   end
 
 
-  def Abingo.bingo!(test_name_or_array = nil, options = {})
-    if test_name_or_array.kind_of? Array
-      test_name_or_array.map do |single_test|
+  #Scores conversions for tests.
+  #test_name_or_array supports three types of input:
+  #
+  #A conversion name: scores a conversion for any test the user is participating in which
+  #  is listening to the specified conversion.
+  #
+  #A test name: scores a conversion for the named test if the user is participating in it.
+  #
+  #An array of either of the above: for each element of the array, process as above.
+  #
+  #nil: score a conversion for every test the u
+  def Abingo.bingo!(name = nil, options = {})
+    if name.kind_of? Array
+      name.map do |single_test|
         self.bingo!(single_test, options)
       end
     else
-      participating_tests = Abingo.cache.read("Abingo::participating_tests::#{Abingo.identity}") || []
-      if test_name_or_array.nil?
+      if name.nil?
+        #Score all participating tests
+        participating_tests = Abingo.cache.read("Abingo::participating_tests::#{Abingo.identity}") || []
         participating_tests.each do |participating_test|
           self.bingo!(participating_test, options)
         end
-      else #Individual, non-nil test is named
-        test_name_str = test_name_or_array.to_s
-        if options[:assume_participation] || participating_tests.include?(test_name_str)
-          cache_key = "Abingo::conversions(#{Abingo.identity},#{test_name_str}"
-          if options[:multiple_conversions] || !Abingo.cache.read(cache_key)
-            Abingo::Alternative.score_conversion(test_name_str)
-            if Abingo.cache.exist?(cache_key)
-              Abingo.cache.increment(cache_key)
-            else
-              Abingo.cache.write(cache_key, 1)
+      else #Could be a test name or conversion name.
+        conversion_name = name.gsub(" ", "_")
+        tests_listening_to_conversion = Abingo.cache.read("Abingo::tests_listening_to_conversion#{conversion_name}")
+        if tests_listening_to_conversion
+          if tests_listening_to_conversion.size > 1
+            tests_listening_to_conversion.map do |individual_test|
+              self.score_conversion!(individual_test.to_s)
             end
+          elsif tests_listening_to_conversion.size == 1
+            test_name_str = tests_listening_to_conversion.first.to_s
+            self.score_conversion!(test_name_str)
           end
+        else
+          #No tests listening for this conversion.  Assume it is just a test name.
+          test_name_str = name.to_s
+          self.score_conversion!(test_name_str)
         end
       end
     end
   end
+
+  protected
 
   #For programmer convenience, we allow you to specify what the alternatives for
   #an experiment are in a few ways.  Thus, we need to actually be able to handle
@@ -162,6 +184,22 @@ class Abingo
   #enough entropy that we don't care) otherwise
   def self.modulo_choice(test_name, choices_count)
     Digest::MD5.hexdigest(Abingo.salt.to_s + test_name + self.identity.to_s).to_i(16) % choices_count
+  end
+
+  def self.score_conversion!(test_name)
+    test_name.gsub!(" ", "_")
+    participating_tests = Abingo.cache.read("Abingo::participating_tests::#{Abingo.identity}") || []
+    if options[:assume_participation] || participating_tests.include?(test_name)
+      cache_key = "Abingo::conversions(#{Abingo.identity},#{test_name}"
+      if options[:multiple_conversions] || !Abingo.cache.read(cache_key)
+        Abingo::Alternative.score_conversion(test_name)
+        if Abingo.cache.exist?(cache_key)
+          Abingo.cache.increment(cache_key)
+        else
+          Abingo.cache.write(cache_key, 1)
+        end
+      end
+    end
   end
 
 end

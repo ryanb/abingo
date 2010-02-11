@@ -48,7 +48,8 @@ class Abingo::Experiment < ActiveRecord::Base
     end
   end
 
-  def self.start_experiment!(test_name, alternatives_array)
+  def self.start_experiment!(test_name, alternatives_array, conversion_name = nil)
+    conversion_name ||= test_name
     cloned_alternatives_array = alternatives_array.clone
     ActiveRecord::Base.transaction do
       experiment = Abingo::Experiment.new(:test_name => test_name)
@@ -61,6 +62,12 @@ class Abingo::Experiment < ActiveRecord::Base
       end
       experiment.save!
       Abingo.cache.write("Abingo::Experiment::exists(#{test_name})".gsub(" ", ""), 1)
+
+      #This might have issues in very, very high concurrency environments...
+      tests_listening_to_conversion = Abingo.cache.read("Abingo::tests_listening_to_conversion#{conversion_name}") || []
+      tests_listening_to_conversion << test_name unless tests_listening_to_conversion.include? test_name
+      Abingo.cache.write("Abingo::tests_listening_to_conversion#{conversion_name}", tests_listening_to_conversion)
+
       experiment
     end
   end
