@@ -1,4 +1,4 @@
-A/Bingo
+A/Bingo Version 1.0.0
 ======
 
 Rails A/B testing.  One minute to install.  One line to set up a new A/B test.
@@ -33,7 +33,7 @@ end
 Example: Controller
 
 def registration
-  if (ab_test("send_welcome_email"))
+  if (ab_test("send_welcome_email"), :conversion => "purchase")
     #send the email, track to see if it later increases conversion to full version
   end
 end
@@ -42,7 +42,7 @@ Example: Conversion tracking (in a controller!)
 
 def buy_new_points
   #some business logic
-  bingo!("new_user_free_points")  # could have been just "bingo!" if that is your only test -- I like syntax sugar
+  bingo!("buy_new_points")  #Either a conversion named with :conversion or a test name.
 end
 
 Example: Conversion tracking (in a view)
@@ -64,7 +64,8 @@ Installation
 
 1)  REQUIRED: You'll need to generate a DB migration to prepare two tables, 
 then migrate your database.  (Note: slight edits required if you use the table names
-"experiments" or "alternatives" at present.)
+"experiments" or "alternatives" at present.)  Note: if you are upgrading to A/Bingo 1.0.0, you'll
+want to do this again.
 
 ruby script/generate abingo_migration
 rake db:migrate
@@ -88,8 +89,7 @@ end
 3)  RECOMMENDED: A/Bingo makes HEAVY use of the cache to reduce load on the
 database and share potentially long-lived "temporary" data, such as what alternative
 a given visitor should be shown for a particular test.  You SHOULD use a cache
-which is shared across all Rails processes -- that probably means MemcachedStore,
-although you can get away with MemStore if you only have one Rails process.
+which is shared across all Rails processes -- that probably means MemcachedStore or RedisStore.
 
 You PROBABLY SHOULD use a persistent cache in case you need to restart your
 machine.  This is an amazingly good use case for MemcacheDB, so if you want to
@@ -106,4 +106,4 @@ A/Bingo defaults to using the same cache store as Rails.  If you want to change 
 Abingo.cache = ActiveSupport::Cache::MemCacheStore.new("cache.example.com:12345") #best if really memcacheDB
 
 
-Copyright (c) 2009 Patrick McKenzie, released under the MIT license
+Copyright (c) 2009-2010 Patrick McKenzie, released under the MIT license
