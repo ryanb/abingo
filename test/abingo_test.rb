@@ -108,5 +108,12 @@ class AbingoTest < ActiveSupport::TestCase
     
     Abingo.bingo!(test_name)  #Should not be counted, test is over.
     assert_equal 0, ex.conversions
+
+    old_identity = Abingo.identity
+    Abingo.identity = "shortCircuitTestNewIdentity"
+    Abingo.test(test_name, %w{A B}, :conversion => conversion_name)
+    Abingo.identity = old_identity
+    ex.reload
+    assert_equal 1, ex.participants  #Original identity counted, new identity not counted b/c test stopped
   end
 end
