@@ -1,20 +1,20 @@
 <h3><%= experiment.test_name.titleize %> <%= %Q|<i>(Test completed)</i>| if experiment.status != "Live" %> </h3>
 <% short_circuit = Abingo.cache.read("Abingo::Experiment::short_circuit(#{experiment.test_name})".gsub(" ", "")) %>
 <table class="experiment" style="border: 1px black;">
-  <tr>
+  <tr class="header_row">
     <th>Name</th>
     <th>Participants</th>
     <th>Conversions</th>
     <th>Notes</th>
   </tr>
-  <tr>
+  <tr class="experiment_row">
     <td>Experiment Total: </td>
     <td><%= experiment.participants %> </td>
     <td><%= experiment.conversions %> (<%= experiment.pretty_conversion_rate %>)</td>
     <td></td>
   </tr>
   <% experiment.alternatives.each do |alternative| %>
-  <tr>
+  <tr class="alternative_row">
     <td>
         <%= h alternative.content %>
     </td>
