@@ -29,6 +29,11 @@ class AbingoTest < ActiveSupport::TestCase
     assert alternatives.include?(alternative_selected)
   end
 
+  test "exists works right" do
+    Abingo.test("exist words right", %w{does does_not})
+    assert Abingo::Experiment.exists?("exist words right")
+  end
+
   test "alternatives picked consistently" do
     alternative_picked = Abingo.test("consistency_test", 1..100)
     100.times do
@@ -87,5 +92,21 @@ class AbingoTest < ActiveSupport::TestCase
     tests.map do |test_name|
       assert_equal 1, Abingo::Experiment.find_by_test_name(test_name).conversions
     end
+  end
+
+  test "short circuiting works" do
+    conversion_name = "purchase"
+    test_name = "short circuit test"
+    alt_picked = Abingo.test(test_name, %w{A B}, :conversion => conversion_name)
+    ex = Abingo::Experiment.find_by_test_name(test_name)
+    alt_not_picked = (%w{A B} - [alt_picked]).first
+
+    ex.end_experiment!(alt_not_picked, conversion_name)
+
+    ex.reload
+    assert_equal "Finished", ex.status
+    
+    Abingo.bingo!(test_name)  #Should not be counted, test is over.
+    assert_equal 0, ex.conversions
   end
 end

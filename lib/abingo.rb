@@ -5,6 +5,11 @@
 
 class Abingo
 
+  @@VERSION = "1.0.0"
+  @@MAJOR_VERSION = "1.0"
+  cattr_reader :VERSION
+  cattr_reader :MAJOR_VERSION
+
   #Not strictly necessary, but eh, as long as I'm here.
   cattr_accessor :salt
   @@salt = "Not really necessary."
@@ -61,6 +66,12 @@ class Abingo
   #  :multiple_participation (true or false)
   #  :conversion  name of conversion to listen for  (alias: conversion_name)
   def self.test(test_name, alternatives, options = {})
+
+    short_circuit = Abingo.cache.read("Abingo::Experiment::short_circuit(#{test_name})".gsub(" ", "_"))
+    unless short_circuit.nil?
+      return short_circuit  #Test has been stopped, pick canonical alternative.
+    end
+    
     unless Abingo::Experiment.exists?(test_name)
       conversion_name = options[:conversion] || options[:conversion_name]
       Abingo::Experiment.start_experiment!(test_name, self.parse_alternatives(alternatives), conversion_name)
@@ -167,7 +178,7 @@ class Abingo
   end
 
   def self.retrieve_alternatives(test_name, alternatives)
-    cache_key = "Abingo::#{test_name}::alternatives".gsub(" ","")
+    cache_key = "Abingo::Experiment::#{test_name}::alternatives".gsub(" ","_")
     alternative_array = self.cache.fetch(cache_key) do
       self.parse_alternatives(alternatives)
     end
