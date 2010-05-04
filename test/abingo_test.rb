@@ -30,8 +30,8 @@ class AbingoTest < ActiveSupport::TestCase
   end
 
   test "exists works right" do
-    Abingo.test("exist words right", %w{does does_not})
-    assert Abingo::Experiment.exists?("exist words right")
+    Abingo.test("exist works right", %w{does does_not})
+    assert Abingo::Experiment.exists?("exist works right")
   end
 
   test "alternatives picked consistently" do
@@ -115,5 +115,21 @@ class AbingoTest < ActiveSupport::TestCase
     Abingo.identity = old_identity
     ex.reload
     assert_equal 1, ex.participants  #Original identity counted, new identity not counted b/c test stopped
+  end
+
+  test "proper experiment creation in high concurrency" do
+    conversion_name = "purchase"
+    test_name = "high_concurrency_test"
+    alternatives = %w{foo bar}
+
+    threads = []
+    5.times do
+      threads << Thread.new do
+        Abingo.test(test_name, alternatives, conversion_name)
+        1
+      end
+    end
+    sleep(10)
+    assert_equal 1, Abingo::Experiment.count_by_sql(["select count(id) from experiments where test_name = ?", test_name])
   end
 end
