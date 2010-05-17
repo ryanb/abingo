@@ -2,7 +2,7 @@ class Abingo::Experiment < ActiveRecord::Base
   include Abingo::Statistics
   include Abingo::ConversionRate
 
-  has_many :alternatives, :dependent => :destroy
+  has_many :alternatives, :dependent => :destroy, :class_name => "Abingo::Alternative"
   validates_uniqueness_of :test_name
 
   def cache_keys

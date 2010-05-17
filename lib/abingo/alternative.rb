@@ -1,7 +1,7 @@
 class Abingo::Alternative < ActiveRecord::Base
   include Abingo::ConversionRate
 
-  belongs_to :experiment
+  belongs_to :experiment, :class_name => "Abingo::Experiment"
   serialize :content
 
   def self.calculate_lookup(test_name, alternative_name)
